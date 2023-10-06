@@ -1,2 +1,9 @@
-pandas
-ray
+ray[rrlib, serve, tune]==2.2.0
+pyarrow
+tqdm
+ipywidgets
+tensorflow
+gym==0.25.0
+opencv-python
+pygame
+transformers
