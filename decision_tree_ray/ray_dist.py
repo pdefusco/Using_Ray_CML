@@ -1,6 +1,6 @@
 !pip3 install -I git+https://github.com/cloudera/cmlextensions.git
 !pip3 install pyarrow
-!pip3 install ray[default]
+!pip3 install ray[default]==2.2.0
 #!pip3 install ray[client]
 #!pip3 install ray[tune]
 !pip3 install xgboost_ray
