@@ -1,4 +1,5 @@
 !pip3 install -I git+https://github.com/cloudera/cmlextensions.git
+!pip3 install pyarrow
 !pip3 install ray[default]
 #!pip3 install ray[client]
 #!pip3 install ray[tune]
@@ -53,7 +54,7 @@ ray.init(address=cluster.get_client_url())
 
 # EXAMPLE 1: RAY DATASETS
 items = [{"name": str(i), "data": i} for i in range(10000)]
-ds = ray.data.from_items(items)   
+ds = ray.data.from_items(items)
 ds.show(5)
 
 squares = ds.map(lambda x: x["data"] ** 2)
@@ -65,10 +66,10 @@ cubes = evens.flat_map(lambda x: [x, x**3])
 sample = cubes.take(10)
 print(sample)
 
-"""The drawback of Dataset transformations is that each step gets executed synchronously. 
-In this example that is a nonissue, but for complex tasks that, for example, 
+"""The drawback of Dataset transformations is that each step gets executed synchronously.
+In this example that is a nonissue, but for complex tasks that, for example,
 mix reading files and processing data, you would want an execution
-that can overlap individual tasks. 
+that can overlap individual tasks.
 DatasetPipeline does exactly that. Let’s rewrite the previous example into a pipeline:"""
 
 pipe = ds.window()
