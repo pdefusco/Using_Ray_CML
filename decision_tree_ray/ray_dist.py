@@ -3,7 +3,7 @@
 !pip3 install ray[default]==2.2.0
 #!pip3 install ray[client]
 #!pip3 install ray[tune]
-!pip3 install xgboost_ray
+#!pip3 install xgboost_ray
 !pip3 install tqdm
 
 import cmlextensions.ray_cluster as rc
