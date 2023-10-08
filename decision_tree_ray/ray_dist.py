@@ -1,3 +1,10 @@
+!pip3 install -I git+https://github.com/cloudera/cmlextensions.git
+!pip3 install ray[default]
+#!pip3 install ray[client]
+#!pip3 install ray[tune]
+!pip3 install xgboost_ray
+!pip3 install tqdm
+
 import cmlextensions.ray_cluster as rc
 import cmlapi
 import os
@@ -34,14 +41,56 @@ cluster = rc.RayCluster(
                          worker_cpu=4, worker_memory=8, worker_nvidia_gpu=0,
                          head_cpu=4, head_memory=8, head_nvidia_gpu=0
                        )
-cluster.init()
+cluster.init(360)
 set_environ(cml,"RAY_ADDRESS", cluster.get_client_url())
 
 cluster.ray_worker_details
 
-runtime_env = {"RXGB_PLACEMENT_GROUP_TIMEOUT_S":"500"}
+#runtime_env = {"RXGB_PLACEMENT_GROUP_TIMEOUT_S":"500"}
 
-ray.init(address=cluster.get_client_url(),runtime_env=runtime_env)
+ray.init(address=cluster.get_client_url())
+
+
+# EXAMPLE 1: RAY DATASETS
+items = [{"name": str(i), "data": i} for i in range(10000)]
+ds = ray.data.from_items(items)   
+ds.show(5)
+
+squares = ds.map(lambda x: x["data"] ** 2)
+
+evens = squares.filter(lambda x: x % 2 == 0)
+evens.count()
+
+cubes = evens.flat_map(lambda x: [x, x**3])
+sample = cubes.take(10)
+print(sample)
+
+"""The drawback of Dataset transformations is that each step gets executed synchronously. 
+In this example that is a nonissue, but for complex tasks that, for example, 
+mix reading files and processing data, you would want an execution
+that can overlap individual tasks. 
+DatasetPipeline does exactly that. Let’s rewrite the previous example into a pipeline:"""
+
+pipe = ds.window()
+
+result = pipe\
+    .map(lambda x: x["data"] ** 2)\
+    .filter(lambda x: x % 2 == 0)\
+    .flat_map(lambda x: [x, x**3])
+result.show(10)
+
+@ray.remote
+def retrieve_task(item):
+    return retrieve(item)
+
+start = time.time()
+object_references = [
+    retrieve_task.remote(item) for item in range(8)
+]
+data = ray.get(object_references)
+print_runtime(data, start)
+
+
 
 @ray.remote
 def remote_hi():
